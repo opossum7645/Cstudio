@@ -8,7 +8,7 @@ import { TerminalPanel } from './TerminalPanel';
 import { Empty } from '../common';
 import { formatDuration } from '../../utils/misc';
 import { runCommand } from '../../features/commands/commands';
-import { useBackend } from '../../services/backendStatus';
+import { compilerUnavailableReason } from '../../services/engine';
 import type { LayoutMode } from '../../hooks/useLayout';
 
 /* ───────────── Problems ───────────── */
@@ -32,7 +32,7 @@ function ProblemsPanel() {
           <button className={filter === 'warning' ? 'on' : ''} onClick={() => setFilter('warning')}>Warning {counts.warning}</button>
         </div>
         <span className="grow" />
-        <button className="btn sm" onClick={() => void compileProject()} disabled={!useBackend.getState().available}><Hammer size={13} /> Ricompila</button>
+        <button className="btn sm" onClick={() => void compileProject()} disabled={!!compilerUnavailableReason()}><Hammer size={13} /> Ricompila</button>
       </div>
       <div className="scroll" style={{ flex: 1 }}>
         {list.length === 0 && <Empty icon={<Info size={26} />} title={diags.length ? 'Nessun elemento per questo filtro' : 'Nessun problema rilevato'}><span>Compila il progetto (F7) per verificare errori e warning.</span></Empty>}

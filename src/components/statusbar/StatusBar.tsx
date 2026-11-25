@@ -7,6 +7,8 @@ import { useDebug } from '../../features/debugger/debugStore';
 import { useRun } from '../../features/execution/runStore';
 import { vcsStore } from '../../features/vcs/vcs';
 import { languageFor } from '../../utils/path';
+import { currentEngine, engineLabel } from '../../services/engine';
+import { useWasm } from '../../features/wasm/browserEngine';
 
 export function StatusBar() {
   const project = useApp((s) => s.project);
@@ -19,6 +21,9 @@ export function StatusBar() {
   const backend = useBackend();
   const dbg = useDebug((s) => s.status);
   const run = useRun((s) => s.status);
+  const wasm = useWasm();
+  useApp((s) => s.settings.compilerEngine);
+  const engine = currentEngine();
   const [branch, setBranch] = useState<string | null>(null);
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
@@ -37,9 +42,9 @@ export function StatusBar() {
   const cfg = project?.buildConfigs[project.activeConfig];
   return (
     <footer className={`statusbar ${debugging ? 'debugging' : ''}`} role="status">
-      <button className="sb-item" title={backend.message} onClick={() => void backend.refresh()}>
-        <span className={`status-dot ${backend.status}`} />
-        <span className="sb-optional">{backend.status === 'online' ? 'Compilatore' : backend.status === 'checking' ? 'Verifica…' : 'Compilatore non disponibile'}</span>
+      <button className="sb-item" title={`${engineLabel(engine)} — ${backend.message}`} onClick={() => ui.openDialog({ kind: 'settings', category: 'compiler' })}>
+        <span className={`status-dot ${engine ? 'online' : backend.status}`} />
+        <span className="sb-optional">{engine === 'server' ? 'Compilatore (server)' : engine === 'browser' ? (wasm.status === 'loading' ? `Compilatore nel browser ${wasm.total ? Math.round((wasm.loaded / wasm.total) * 100) + '%' : '…'}` : 'Compilatore nel browser') : 'Compilatore non disponibile'}</span>
       </button>
       {!online && <span className="sb-item" title="Nessuna connessione: editor e progetti funzionano offline"><WifiOff size={13} /> Offline</span>}
       {online && backend.status !== 'online' && <span className="sb-item sb-optional"><Wifi size={13} /></span>}

@@ -89,15 +89,13 @@ int main(void) {
 `;
 
 async function importZip(page, file) {
-  await page.getByRole('button', { name: 'Altri comandi' }).click();
-  // fall back to the command palette if the menu item is not there (welcome screen)
-  await page.keyboard.press('Escape');
   await page.keyboard.press('Control+Shift+P');
   await page.getByPlaceholder(/Cerca file|Digita >/).fill('>Importa progetto');
   await page.keyboard.press('Enter');
-  const chooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: /Progetto da archivio ZIP/ }).click();
-  await (await chooser).setFiles(file);
+  const btn = page.getByRole('button', { name: /Progetto da archivio ZIP/ });
+  await btn.waitFor({ timeout: 15000 });
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), btn.click()]);
+  await chooser.setFiles(file);
   const name = file.split('/').pop().replace('.zip', '');
   await page.locator('.crumbs', { hasText: name }).waitFor({ timeout: 30000 });
   await page.locator('.monaco-editor').first().waitFor({ timeout: 30000 });
@@ -134,7 +132,7 @@ const main = async () => {
     page.on('console', (m) => m.type() === 'error' && !/favicon|Failed to load resource/.test(m.text()) && pageErrors.push(m.text()));
     await page.goto(URL_);
     await page.getByText('Nuovo progetto C').waitFor({ timeout: 20000 });
-    await page.waitForFunction(() => document.querySelector('.status-card')?.textContent?.includes('Compilatore disponibile'), null, { timeout: 15000 });
+    await page.waitForFunction(() => document.querySelector('.status-card')?.textContent?.includes('server (gcc/clang in sandbox)'), null, { timeout: 15000 });
     await page.screenshot({ path: join(shots, '01-welcome-desktop.png') });
     step('Splash → Welcome, backend online', true);
 
@@ -275,9 +273,10 @@ const main = async () => {
       // tablet key bar inserts at cursor
       if (keybar) {
         await p.keyboard.press('Control+End');
+        await p.waitForTimeout(300);
         await p.locator('.keybar button', { hasText: '#' }).first().dispatchEvent('pointerdown');
-        const txt = await p.locator('.view-lines').first().textContent();
-        step(`${name}: barra simboli inserisce al cursore`, (txt ?? '').trimEnd().endsWith('#'));
+        const ok = await p.locator('.view-lines').first().filter({ hasText: /#\s*$/ }).waitFor({ timeout: 5000 }).then(() => true, () => false);
+        step(`${name}: barra simboli inserisce al cursore`, ok);
       }
       if (name === 'phone') {
         await p.getByRole('button', { name: /^Run/ }).tap();
@@ -316,8 +315,8 @@ const main = async () => {
       await c.setOffline(true);
       await p.reload();
       await p.locator('.monaco-editor').first().waitFor({ timeout: 20000 }); // last project reopened from IndexedDB, code from SW cache
-      await p.waitForFunction(() => document.querySelector('.statusbar')?.textContent?.includes('non disponibile'), null, { timeout: 15000 });
-      const disabled = await p.getByRole('button', { name: 'Compila', exact: true }).isDisabled();
+      await p.waitForFunction(() => document.querySelector('.statusbar')?.textContent?.includes('nel browser'), null, { timeout: 15000 });
+      const disabled = !(await p.getByRole('button', { name: 'Compila', exact: true }).isDisabled());
       await p.locator('.view-lines').click();
       await p.keyboard.type('// offline edit');
       await p.keyboard.press('Control+S');

@@ -5,6 +5,7 @@ import { useApp, ui, updateSettings, updateProject, activeBuildConfig, refreshPr
 import { UI_THEMES, SYNTAX_SCHEMES } from '../../features/settings/themes';
 import { DEFAULT_SETTINGS, DEFAULT_TABLET_KEYS } from '../../features/settings/defaults';
 import { useBackend } from '../../services/backendStatus';
+import { EngineStatus } from '../EngineStatus';
 import { configSummary } from '../../features/compiler/buildStore';
 import { COMMANDS } from '../../features/commands/commands';
 import { releaseFrom } from '../../features/projects/templates';
@@ -248,6 +249,16 @@ function CompilerSettings({ s, set }: P) {
   const cfg = project ? project.buildConfigs[which] : s.defaultBuildConfig;
   return (
     <>
+      <h3>Motore di compilazione</h3>
+      <Row label="Dove compilare ed eseguire" desc="Automatico: usa il server quando è raggiungibile, altrimenti il compilatore nel browser">
+        <select className="select" value={s.compilerEngine} onChange={(e) => set({ compilerEngine: e.target.value as Settings['compilerEngine'] })}>
+          <option value="auto">Automatico</option>
+          <option value="server">Solo server C-Studio</option>
+          <option value="browser">Solo nel browser (Clang WebAssembly)</option>
+        </select>
+      </Row>
+      <EngineStatus />
+      <p className="muted" style={{ fontSize: '0.88em' }}>Nel browser: Clang 22 reale compilato in WebAssembly (target wasm32-wasi). Il programma gira isolato in un Web Worker; un ciclo infinito viene fermato dal timeout. Non disponibili nel browser: debugger GDB, clang-format, thread POSIX, fork/segnali/socket.</p>
       <h3>Server di compilazione</h3>
       <Row label="Stato" desc={backend.message}>
         <span className={`status-dot ${backend.status}`} />

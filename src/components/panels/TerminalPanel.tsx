@@ -3,10 +3,10 @@ import { create } from 'zustand';
 import { Trash2, Square } from 'lucide-react';
 import { Shell, ShellHost } from '../../features/terminal/shell';
 import { useApp, setBuffer, saveFile, createFile, createFolder, deletePath, renamePath, openFile, activeBuildConfig } from '../../stores/appStore';
-import { api, BackendError, SourceFile } from '../../services/api';
+import { BackendError, SourceFile } from '../../services/api';
+import { compileFiles, compilerUnavailableReason } from '../../services/engine';
 import { startRunSession, describeExit } from '../../features/execution/runStore';
 import { formatCode } from '../../editor/monaco';
-import { useBackend } from '../../services/backendStatus';
 import type { BuildConfig, CStandard, OptLevel } from '../../types';
 
 interface Line {
@@ -77,8 +77,9 @@ const host: ShellHost = {
   clear: () => useTerm.setState({ lines: [] }),
   open: (p) => openFile(p),
   async compile(sources, flags) {
-    if (!useBackend.getState().available) {
-      print(`${useBackend.getState().message}\n`, 'err');
+    const unavailable = compilerUnavailableReason();
+    if (unavailable) {
+      print(`${unavailable}\n`, 'err');
       return false;
     }
     const all = currentFiles();
@@ -88,7 +89,7 @@ const host: ShellHost = {
       .map(([path, content]) => ({ path, content }));
     const config = configFromFlags(flags);
     try {
-      const r = await api.compile(files, config);
+      const r = await compileFiles(files, config);
       for (const st of r.steps) {
         if (st.stderr.trim()) print(st.stderr.endsWith('\n') ? st.stderr : st.stderr + '\n', st.exitCode === 0 ? 'out' : 'err');
       }

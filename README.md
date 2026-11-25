@@ -1,8 +1,26 @@
 # C-Studio — Professional C IDE
 
-IDE web per il linguaggio C, tablet-first, con editor Monaco, compilazione **reale** GCC/Clang in sandbox, esecuzione interattiva, debugger **GDB reale**, terminale integrato, controllo versione locale e funzionamento offline (PWA).
+IDE web per il linguaggio C, tablet-first, con editor Monaco, compilazione **reale** GCC/Clang in sandbox sul server **oppure direttamente nel browser** (Clang in WebAssembly), esecuzione interattiva, debugger **GDB reale**, terminale integrato, controllo versione locale e funzionamento offline (PWA).
 
-## Avvio rapido
+## Provalo subito (GitHub Pages)
+
+L’app è pubblicata da GitHub Actions su **https://opossum7645.github.io/Cstudio/**. Senza server il codice viene compilato ed eseguito **nel browser** con Clang 22 reale compilato in WebAssembly ([YoWASP](https://yowasp.org/)): al primo uso scarica il compilatore (~100 MB, ~23 MB compressi), poi resta in cache e funziona anche offline. Il debugger GDB e clang-format richiedono il server.
+
+## Motori di compilazione
+
+| | Server C-Studio | Nel browser |
+|---|---|---|
+| Compilatore | GCC 13 / Clang 18 (Linux x86-64) | Clang 22 → WebAssembly (wasm32-wasi) |
+| Esecuzione | processo in sandbox | Web Worker isolato |
+| Input interattivo | sì | sì (tramite service worker) |
+| Debugger GDB | sì | no |
+| clang-format | sì | no |
+| Thread, fork, segnali, socket | sì (nei limiti della sandbox) | no (non supportati da WASI) |
+| Errori runtime | segnali reali (SIGFPE, SIGSEGV…) | trap WebAssembly mappate sui segnali equivalenti |
+
+*Impostazioni → Compilatore → Dove compilare ed eseguire*: **Automatico** (server se raggiungibile, altrimenti browser), **Solo server**, **Solo browser**.
+
+## Avvio rapido (con server)
 
 Requisiti: Node.js ≥ 20, Linux con `gcc`, `clang` (opzionale), `gdb`, `clang-format` (opzionale), `util-linux` (`unshare`, `setpriv`, `prlimit`). Il backend in modalità sandbox *native* deve girare come **root** (usa namespace Linux e cambia uid per ogni job).
 
@@ -94,7 +112,8 @@ e2e/run.mjs       test end-to-end in Chrome reale
 - **Ricerca globale** (testo, regex, maiuscole, parola intera, filtri include/exclude, sostituzione singola o totale), **command palette** (file e comandi), scorciatoie da tastiera.
 - **Controllo versione locale**: init, commit, modifiche (A/M/D), diff (affiancato/in linea), annulla modifiche, cronologia, ripristino versione, branch.
 - **Interfaccia**: tema scuro/chiaro/OLED, colori personalizzabili, densità (compatta/comoda/touch/automatica), layout distinti per desktop, tablet orizzontale, tablet verticale (cassetto), smartphone (navigazione inferiore, pannelli a schermo intero), barra simboli C per tablet personalizzabile che resta sopra la tastiera virtuale, pannello ridimensionabile/massimizzabile, toast, dialoghi, stati vuoti/errore, impostazioni complete (Aspetto, Editor, Compilatore, Tastiera, Workspace, Privacy e sicurezza), documentazione C con guide.
-- **PWA**: manifest, icone, service worker che precarica tutti gli asset; offline funzionano editor, progetti, ricerca, VCS, terminale (comandi file); compilazione/esecuzione/debug/formattazione vengono mostrate come non disponibili con il motivo.
+- **Compilatore nel browser**: Clang reale in WebAssembly (compilazione separata dei .c e link), esecuzione in Web Worker con stdout/stderr in streaming, input interattivo, stop, timeout, limite di output, file del progetto accessibili con `fopen`, trap mappate sui segnali; usato anche dal terminale.
+- **PWA**: manifest, icone, service worker che precarica tutti gli asset e mette in cache il compilatore WebAssembly; offline funzionano editor, progetti, ricerca, VCS, terminale e — dopo il primo download — compilazione ed esecuzione nel browser. Debug e formattazione offline vengono mostrati come non disponibili con il motivo.
 
 ## Funzionalità non ancora complete (dichiarate, non simulate)
 
@@ -112,10 +131,11 @@ e2e/run.mjs       test end-to-end in Chrome reale
 ```bash
 npm test                    # unit (vitest): indicizzatore C, ricerca, VCS, shell, ZIP, path — 12 test
 sudo npm run test:backend   # integrazione backend con GCC reale — 14 test
-npm run build && sudo node e2e/run.mjs   # end-to-end in Chrome reale — 23 verifiche, screenshot in e2e/screenshots
+npm run build && sudo node e2e/run.mjs   # end-to-end in Chrome reale con server — 23 verifiche
+npx vite build --base /cstudio/ && node e2e/browser-engine.mjs   # end-to-end senza server (compilatore nel browser) — 10 verifiche
 ```
 
-Risultati dell’ultima esecuzione: **12/12 unit, 14/14 backend, 23/23 end-to-end**, incluso:
+Risultati dell’ultima esecuzione: **12/12 unit, 14/14 backend, 23/23 end-to-end con server, 10/10 end-to-end senza server** (i tre programmi di prova passano con entrambi i motori), incluso:
 - Test 1 *Hello World*: compilato ed eseguito, output `Hello, World!`, codice 0.
 - Test 2 *somma*: prompt visibile prima di `scanf`, input `17 25` → `Somma: 42`.
 - Test 3 *divisione per zero*: compila (eventuale warning), **non** è un errore di compilazione; a runtime viene segnalato `SIGFPE`.

@@ -1,12 +1,12 @@
-import { FilePlus2, FolderOpen, FileArchive, FolderInput, GraduationCap, Code2, Settings as Gear, Trash2, Clock, Server, ChevronRight, BookOpen } from 'lucide-react';
+import { FilePlus2, FolderOpen, FileArchive, FolderInput, GraduationCap, Code2, Settings as Gear, Trash2, Clock, ChevronRight, BookOpen } from 'lucide-react';
 import { useApp, ui, openProject, addProject, deleteProject } from '../../stores/appStore';
-import { useBackend } from '../../services/backendStatus';
 import { Logo, openMenu } from '../common';
 import { EXAMPLES, TEMPLATES } from '../../features/projects/templates';
 import { newProjectFromTemplate } from '../../features/projects/projectRepo';
 import { timeAgo } from '../../utils/misc';
 import { confirmYes } from '../../stores/uiFeedback';
 import { openFolderFlow } from '../dialogs/ImportExport';
+import { EngineStatus } from '../EngineStatus';
 
 export function Splash() {
   return (
@@ -22,7 +22,6 @@ export function Splash() {
 export function Welcome() {
   const projects = useApp((s) => s.projects);
   const settings = useApp((s) => s.settings);
-  const backend = useBackend();
 
   const openExample = async (id: string) => {
     const ex = EXAMPLES.find((e) => e.id === id)!;
@@ -130,20 +129,10 @@ export function Welcome() {
               </div>
             )}
 
-            <div className="status-card">
-              <Server size={18} />
-              <div className="grow">
-                <div className="row" style={{ gap: 6 }}>
-                  <span className={`status-dot ${backend.status}`} />
-                  <b>{backend.status === 'online' ? 'Compilatore disponibile' : 'Compilatore non disponibile'}</b>
-                </div>
-                <div className="muted" style={{ fontSize: '0.88em' }}>{backend.message}</div>
-              </div>
-              <button className="btn sm" onClick={() => void backend.refresh()}>Verifica</button>
-            </div>
+            <EngineStatus />
             <p className="muted" style={{ fontSize: '0.88em' }}>
-              Editor, progetti, ricerca, controllo versione locale e terminale (comandi sui file) funzionano anche offline.
-              Compilazione, esecuzione, debug e formattazione richiedono il server C-Studio.
+              Editor, progetti, ricerca, controllo versione locale e terminale funzionano anche offline. Senza server il codice C viene
+              compilato ed eseguito nel browser (Clang WebAssembly); il debugger GDB e clang-format richiedono il server C-Studio.
             </p>
           </section>
         </div>

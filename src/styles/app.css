@@ -411,3 +411,4 @@ a { color: var(--primary); }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 640px) { .toasts { bottom: calc(132px + var(--safe-bottom)); left: 12px; right: 12px; width: auto; } }
+.progress { height: 4px; border-radius: 4px; background: var(--border); overflow: hidden; }

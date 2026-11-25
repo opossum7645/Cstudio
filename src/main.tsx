@@ -10,7 +10,7 @@ createRoot(document.getElementById('root')!).render(
 );
 
 // PWA: service worker for offline use of the IDE shell (production builds only)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('Service worker non registrato', e));
   });

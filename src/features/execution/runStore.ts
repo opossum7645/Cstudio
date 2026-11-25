@@ -4,7 +4,8 @@ import type { BuildConfig, CompileResult, ExitInfo } from '../../types';
 import { Session, SourceFile } from '../../services/api';
 import { useApp, activeBuildConfig } from '../../stores/appStore';
 import { useBuild, applyCompileResult, collectSources, log, configSummary } from '../compiler/buildStore';
-import { useBackend } from '../../services/backendStatus';
+import { compilerUnavailableReason, currentEngine } from '../../services/engine';
+import { startBrowserRunSession } from '../wasm/browserEngine';
 import { formatDuration } from '../../utils/misc';
 
 export interface OutputChunk {
@@ -74,6 +75,7 @@ export interface RunHandlers {
 
 /** Low-level: start a run session (used by the Run panel and the terminal). */
 export function startRunSession(files: SourceFile[], config: BuildConfig, args: string[], wallTimeoutMs: number, h: RunHandlers): { send(data: string): void; eof(): void; stop(): void } {
+  if (currentEngine() === 'browser') return startBrowserRunSession(files, config, args, wallTimeoutMs, h);
   let exited = false;
   const s = new Session<ServerMsg>(
     '/ws/run',
@@ -105,8 +107,9 @@ export function parseArgs(s: string): string[] {
 async function launch(files: SourceFile[], config: BuildConfig, compileFirst: boolean): Promise<void> {
   if (controller) return;
   const app = useApp.getState();
-  if (!useBackend.getState().available) {
-    useRun.setState({ status: 'finished', output: [{ stream: 'system', text: useBackend.getState().message + '\n' }], exit: null, error: useBackend.getState().message });
+  const unavailable = compilerUnavailableReason();
+  if (unavailable) {
+    useRun.setState({ status: 'finished', output: [{ stream: 'system', text: unavailable + '\n' }], exit: null, error: unavailable });
     useApp.setState({ panelOpen: true, panelTab: 'run' });
     return;
   }
@@ -115,7 +118,7 @@ async function launch(files: SourceFile[], config: BuildConfig, compileFirst: bo
   useApp.setState({ panelOpen: true, panelTab: 'run' });
   if (compileFirst) log('info', `Compila ed esegui — ${configSummary(config)}`);
   else log('info', 'Esecuzione dell’ultima build riuscita');
-  append('system', compileFirst ? 'Compilazione in corso…\n' : 'Avvio del programma…\n');
+  append('system', currentEngine() === 'browser' ? 'Compilazione nel browser (Clang WebAssembly)…\n' : compileFirst ? 'Compilazione in corso…\n' : 'Avvio del programma…\n');
   const ctl = startRunSession(files, config, args, app.settings.runTimeoutSec * 1000, {
     onPhase: (p) => {
       if (p === 'running') {

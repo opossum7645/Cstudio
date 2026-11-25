@@ -158,6 +158,7 @@ export interface Settings {
 
   defaultBuildConfig: BuildConfig;
   runTimeoutSec: number;
+  compilerEngine: 'auto' | 'server' | 'browser';
   liveDiagnostics: boolean;
   backendUrl: string;
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "C-Studio — professional, tablet-first C IDE for the web",
+  "description": "C-Studio \u2014 professional, tablet-first C IDE for the web",
   "scripts": {
     "dev": "vite",
     "dev:server": "npm --prefix backend run dev",
@@ -12,9 +12,12 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:backend": "npm --prefix backend test",
-    "test:e2e": "node e2e/run.mjs"
+    "test:e2e": "node e2e/run.mjs",
+    "test:e2e:browser": "node e2e/browser-engine.mjs"
   },
   "dependencies": {
+    "@bjorn3/browser_wasi_shim": "0.4.2",
+    "@yowasp/clang": "22.0.0-git20695-13",
     "jszip": "^3.10.2",
     "lucide-react": "^1.80.0",
     "monaco-editor": "^0.52.2",

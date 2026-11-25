@@ -42,6 +42,7 @@ export default defineConfig({
     },
   },
   worker: { format: 'es' },
+  optimizeDeps: { exclude: ['@yowasp/clang'] },
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],

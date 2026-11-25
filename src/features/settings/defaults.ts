@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
   defaultBuildConfig: defaultDebugConfig,
   runTimeoutSec: 60,
+  compilerEngine: 'auto',
   liveDiagnostics: true,
   backendUrl: '',
 

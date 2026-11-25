@@ -6,6 +6,7 @@ import { compileProject, useBuild } from '../compiler/buildStore';
 import { runActions, useRun } from '../execution/runStore';
 import { debugActions, isDebugging, useDebug } from '../debugger/debugStore';
 import { useBackend } from '../../services/backendStatus';
+import { compilerUnavailableReason } from '../../services/engine';
 import { getActiveEditor } from '../../editor/editorRegistry';
 import { newFileFlow, newFolderFlow } from '../projects/flows';
 import { toast } from '../../stores/uiFeedback';
@@ -23,6 +24,8 @@ export interface Command {
 const needProject = () => (useApp.getState().project ? null : 'Apri un progetto');
 const needEditor = () => (activeFile() ? null : 'Nessun file aperto');
 const needBackend = () => needProject() ?? (useBackend.getState().available ? null : useBackend.getState().message);
+const needCompiler = () => needProject() ?? compilerUnavailableReason();
+const needDebugger = () => needProject() ?? (useBackend.getState().available ? (useBackend.getState().health?.features.debug === false ? 'GDB non è installato sul server' : null) : 'Il debugger (GDB) richiede il server C-Studio: non disponibile nel compilatore del browser');
 const busy = () => (runActions.busy || isDebugging() ? 'Un programma è già in esecuzione' : null);
 const editorAction = (id: string) => () => {
   const ed = getActiveEditor();
@@ -62,14 +65,14 @@ export const COMMANDS: Command[] = [
   { id: 'edit.addCursorBelow', label: 'Aggiungi cursore sotto', category: 'Modifica', disabledReason: needEditor, run: editorAction('editor.action.insertCursorBelow') },
   { id: 'edit.selectAllOccurrences', label: 'Seleziona tutte le occorrenze', category: 'Modifica', disabledReason: needEditor, run: editorAction('editor.action.selectHighlights') },
   // Build & run
-  { id: 'build.compile', label: 'Compila', category: 'Build', keys: 'F7', disabledReason: () => needBackend() ?? (useBuild.getState().building ? 'Compilazione in corso' : null), run: () => compileProject() },
-  { id: 'build.compile2', label: 'Compila (Ctrl+Shift+B)', category: 'Build', keys: 'Ctrl+Shift+B', disabledReason: () => needBackend(), run: () => compileProject() },
-  { id: 'run.run', label: 'Esegui ultima build', category: 'Build', disabledReason: () => needBackend() ?? busy() ?? (useBuild.getState().lastBuild ? null : 'Compila prima il progetto'), run: () => runActions.runLastBuild() },
-  { id: 'run.compileRun', label: 'Compila ed esegui', category: 'Build', keys: 'Ctrl+F5', disabledReason: () => needBackend() ?? busy(), run: () => runActions.compileAndRun() },
+  { id: 'build.compile', label: 'Compila', category: 'Build', keys: 'F7', disabledReason: () => needCompiler() ?? (useBuild.getState().building ? 'Compilazione in corso' : null), run: () => compileProject() },
+  { id: 'build.compile2', label: 'Compila (Ctrl+Shift+B)', category: 'Build', keys: 'Ctrl+Shift+B', disabledReason: () => needCompiler(), run: () => compileProject() },
+  { id: 'run.run', label: 'Esegui ultima build', category: 'Build', disabledReason: () => needCompiler() ?? busy() ?? (useBuild.getState().lastBuild ? null : 'Compila prima il progetto'), run: () => runActions.runLastBuild() },
+  { id: 'run.compileRun', label: 'Compila ed esegui', category: 'Build', keys: 'Ctrl+F5', disabledReason: () => needCompiler() ?? busy(), run: () => runActions.compileAndRun() },
   { id: 'run.stop', label: 'Interrompi esecuzione', category: 'Build', keys: 'Shift+F5', disabledReason: () => (runActions.busy || isDebugging() ? null : 'Nessun programma in esecuzione'), run: () => { if (isDebugging()) debugActions.command('stop'); else runActions.stop(); } },
   { id: 'config.toggle', label: 'Cambia configurazione Debug/Release', category: 'Build', disabledReason: needProject, run: () => { const p = useApp.getState().project; if (p) setActiveConfig(p.activeConfig === 'debug' ? 'release' : 'debug'); } },
   // Debug
-  { id: 'debug.start', label: 'Avvia debug / Continua', category: 'Debug', keys: 'F5', disabledReason: () => (useDebug.getState().status === 'stopped' ? null : needBackend() ?? (runActions.busy ? 'Un programma è in esecuzione' : isDebugging() ? 'Il programma è in esecuzione' : null)), run: () => (useDebug.getState().status === 'stopped' ? debugActions.command('continue') : debugActions.start()) },
+  { id: 'debug.start', label: 'Avvia debug / Continua', category: 'Debug', keys: 'F5', disabledReason: () => (useDebug.getState().status === 'stopped' ? null : needDebugger() ?? (runActions.busy ? 'Un programma è in esecuzione' : isDebugging() ? 'Il programma è in esecuzione' : null)), run: () => (useDebug.getState().status === 'stopped' ? debugActions.command('continue') : debugActions.start()) },
   { id: 'debug.next', label: 'Step Over', category: 'Debug', keys: 'F10', disabledReason: () => (useDebug.getState().status === 'stopped' ? null : 'Debug non in pausa'), run: () => debugActions.command('next') },
   { id: 'debug.step', label: 'Step Into', category: 'Debug', keys: 'F11', disabledReason: () => (useDebug.getState().status === 'stopped' ? null : 'Debug non in pausa'), run: () => debugActions.command('step') },
   { id: 'debug.finish', label: 'Step Out', category: 'Debug', keys: 'Shift+F11', disabledReason: () => (useDebug.getState().status === 'stopped' ? null : 'Debug non in pausa'), run: () => debugActions.command('finish') },

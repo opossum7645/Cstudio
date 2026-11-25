@@ -1,7 +1,8 @@
 /** Compilation state: diagnostics (Problems), compiler log (Output) and the last successful build snapshot. */
 import { create } from 'zustand';
 import type { BuildConfig, CompileResult, Diagnostic } from '../../types';
-import { api, BackendError, SourceFile } from '../../services/api';
+import { BackendError, SourceFile } from '../../services/api';
+import { compileFiles, compilerUnavailableReason, currentEngine } from '../../services/engine';
 import { useApp, activeBuildConfig } from '../../stores/appStore';
 import { formatBytes, formatDuration, hashFiles, uid } from '../../utils/misc';
 import { useBackend } from '../../services/backendStatus';
@@ -113,19 +114,20 @@ export async function compileProject(opts: { quiet?: boolean } = {}): Promise<bo
     if (!opts.quiet) log('error', 'Il progetto non contiene file .c da compilare');
     return false;
   }
-  if (!useBackend.getState().available) {
-    if (!opts.quiet) log('error', `Compilazione non disponibile: ${useBackend.getState().message}`);
+  const unavailable = compilerUnavailableReason();
+  if (unavailable) {
+    if (!opts.quiet) log('error', `Compilazione non disponibile: ${unavailable}`);
     return false;
   }
   if (opts.quiet && useBuild.getState().diagnosticsHash === sourcesHash(files)) return true;
   inflight = (async () => {
     useBuild.setState({ building: true });
     if (!opts.quiet) {
-      log('info', `Compilazione (${config.mode === 'debug' ? 'Debug' : 'Release'}) — ${configSummary(config)}`);
+      log('info', `Compilazione (${config.mode === 'debug' ? 'Debug' : 'Release'}) — ${currentEngine() === 'browser' ? 'clang (WebAssembly, nel browser)' : configSummary(config)}`);
       useApp.setState({ panelOpen: true, panelTab: 'output' });
     }
     try {
-      const result = await api.compile(files, config);
+      const result = await compileFiles(files, config);
       if (opts.quiet) {
         useBuild.setState({ diagnostics: result.diagnostics, diagnosticsHash: sourcesHash(files), lastResult: result });
         if (result.success) useBuild.setState({ lastBuild: { files, config, hash: sourcesHash(files), at: Date.now() } });

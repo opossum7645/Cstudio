@@ -5,7 +5,8 @@
 import { useApp, dirtyFiles, saveAll, persistSession } from '../stores/appStore';
 import { projectRepo } from '../features/projects/projectRepo';
 import { compileProject } from '../features/compiler/buildStore';
-import { useBackend } from '../services/backendStatus';
+import { currentEngine } from '../services/engine';
+import { useWasm } from '../features/wasm/browserEngine';
 import { debounce } from '../utils/misc';
 
 export function installPersistence(): () => void {
@@ -31,7 +32,7 @@ export function installPersistence(): () => void {
   const saveSession = debounce(() => void persistSession(), 300);
   const liveDiag = debounce(() => {
     const s = useApp.getState();
-    if (s.project && s.settings.liveDiagnostics && s.settings.extensions.liveDiagnostics !== false && useBackend.getState().available) void compileProject({ quiet: true });
+    if (s.project && s.settings.liveDiagnostics && s.settings.extensions.liveDiagnostics !== false && (currentEngine() === 'server' || (currentEngine() === 'browser' && useWasm.getState().status === 'ready'))) void compileProject({ quiet: true });
   }, 700);
 
   const unsub = useApp.subscribe((s, prev) => {
