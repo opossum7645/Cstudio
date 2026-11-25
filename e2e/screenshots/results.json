@@ -1,0 +1,117 @@
+[
+  {
+    "name": "Icone PWA generate",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Splash → Welcome, backend online",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Creazione progetto da template + apertura main.c",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Test 1: Hello World compilato ed eseguito (exit 0)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Creazione file .h con header guard",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Modifica + salvataggio (indicatore schede)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Recupero sessione dopo ricarica (progetto e schede)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Test 2: importazione ZIP + input interattivo → \"Somma: 42\"",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Test 3: divisione per zero → errore runtime SIGFPE (nessun errore di compilazione)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Errori di compilazione in Problems con file:riga:colonna e navigazione",
+    "ok": true,
+    "detail": "src/main.c:5:5 / Ln 5, Col 5"
+  },
+  {
+    "name": "Debugger GDB: breakpoint, variabili locali, step into, continue",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Terminale: ls, gcc, ./app",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Editor diviso (vista verticale)",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Impostazioni e cambio tema",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Esportazione ZIP",
+    "ok": true,
+    "detail": "debugme.zip"
+  },
+  {
+    "name": "tablet-landscape: barra simboli inserisce al cursore",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tablet-landscape: layout, progetto multi-file compilato ed eseguito, nessun overflow orizzontale",
+    "ok": true,
+    "detail": "keybar=1"
+  },
+  {
+    "name": "tablet-portrait: barra simboli inserisce al cursore",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "tablet-portrait: layout, progetto multi-file compilato ed eseguito, nessun overflow orizzontale",
+    "ok": true,
+    "detail": "keybar=1"
+  },
+  {
+    "name": "phone: barra simboli inserisce al cursore",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "phone: layout, progetto multi-file compilato ed eseguito, nessun overflow orizzontale",
+    "ok": true,
+    "detail": "keybar=1"
+  },
+  {
+    "name": "Offline: app ed editor dalla cache del service worker, modifica e salvataggio locali, compilazione disabilitata con spiegazione",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "Nessun errore JavaScript nelle pagine",
+    "ok": true,
+    "detail": ""
+  }
+]
